@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var url = "https://zalando.no"
+var url = "https://zalando.com"
 
 func FetchParse(url string) []string {
 	resp, err := http.Get(url)
