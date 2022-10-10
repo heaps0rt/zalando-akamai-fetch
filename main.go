@@ -9,29 +9,22 @@ import (
 	"strings"
 )
 
-var url = "https://zalando.com"
+var url = "ikea.com"
 
-func FetchParse(url string) []string {
-	resp, err := http.Get(url)
+func FetchParse(url string) {
+	resp, err := http.Get("https://" + url)
 	if err != nil {
 		panic(err)
 	}
 
 	defer resp.Body.Close()
 
-	/*
-		html, err := io.ReadAll(resp.Body)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%s", html)
-	*/
-
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// checks html for tag <script type="text/javascript" src=
 	var uri []string
 	doc.Find("script").Each(func(i int, s *goquery.Selection) {
 		if typee, _ := s.Attr("type"); typee == "text/javascript" {
@@ -40,9 +33,26 @@ func FetchParse(url string) []string {
 		}
 	})
 
-	var fullURL []string
 	for _, uri := range uri {
-		fullURL := url + uri
+		fullURL := uri
+		if strings.Contains(uri, "https://") == false {
+			response, err := http.Get("https://" + url + fullURL)
+			if err != nil {
+				panic(err)
+			}
+
+			html, err := io.ReadAll(response.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if strings.Contains(string(html), "bmak") == true {
+				fmt.Println("https://" + url + fullURL)
+				break
+			} else {
+				continue
+			}
+		}
 		response, err := http.Get(fullURL)
 		if err != nil {
 			panic(err)
@@ -52,6 +62,7 @@ func FetchParse(url string) []string {
 		if err != nil {
 			panic(err)
 		}
+
 		if strings.Contains(string(html), "bmak") == true {
 			fmt.Println(fullURL)
 			break
@@ -59,9 +70,10 @@ func FetchParse(url string) []string {
 			continue
 		}
 	}
-	return fullURL
+
 }
 
 func main() {
 	FetchParse(url)
+
 }
