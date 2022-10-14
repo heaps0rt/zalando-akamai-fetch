@@ -6,16 +6,23 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
-var url = "ikea.com"
+var url = "zalando.no"
 
-func FetchParse(url string) {
+func FetchParse(url string) (string, string) {
 	resp, err := http.Get("https://" + url)
 	if err != nil {
 		panic(err)
 	}
+	/*
+		html, err := io.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+	*/
 
 	defer resp.Body.Close()
 
@@ -32,9 +39,13 @@ func FetchParse(url string) {
 			uri = append(uri, textjavascript)
 		}
 	})
-
+	if len(uri) == 0 {
+		fmt.Println("link not found")
+		os.Exit(1)
+	}
 	for _, uri := range uri {
 		fullURL := uri
+		//WfullURL := "https://" + url + uri
 		if strings.Contains(uri, "https://") == false {
 			response, err := http.Get("https://" + url + fullURL)
 			if err != nil {
@@ -70,7 +81,15 @@ func FetchParse(url string) {
 			continue
 		}
 	}
+	var WOcompleteURL string
+	var WcompleteURL string
+	if strings.Contains(uri[len(uri)-1], "https://") == false {
+		WOcompleteURL = "https://" + url + uri[len(uri)-1]
+	} else if strings.Contains(uri[len(uri)-1], "https://") == true {
+		WcompleteURL = uri[len(uri)-1]
+	}
 
+	return WOcompleteURL, WcompleteURL
 }
 
 func main() {
