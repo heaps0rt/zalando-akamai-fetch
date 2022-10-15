@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
-var url = "zalando.com"
+var url = "ikea.no"
 
-func FetchParse(url string) (string, string) {
+func FetchParse(url string) string {
 	resp, err := http.Get("https://" + url)
 	if err != nil {
 		panic(err)
@@ -81,18 +82,33 @@ func FetchParse(url string) (string, string) {
 			continue
 		}
 	}
-	var WOcompleteURL string
-	var WcompleteURL string
+	var CompleteURL string
 	if strings.Contains(uri[len(uri)-1], "https://") == false {
-		WOcompleteURL = "https://" + url + uri[len(uri)-1]
+		CompleteURL = "https://" + url + uri[len(uri)-1]
 	} else if strings.Contains(uri[len(uri)-1], "https://") == true {
-		WcompleteURL = uri[len(uri)-1]
+		CompleteURL = uri[len(uri)-1]
 	}
 
-	return WOcompleteURL, WcompleteURL
+	script, err := http.Get(CompleteURL)
+	if err != nil {
+		panic(err)
+	}
+
+	html, err := io.ReadAll(script.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	f, err := os.Create("obfuscated.js")
+	defer f.Close()
+
+	f.Write(html)
+	return CompleteURL
 }
 
 func main() {
+	start := time.Now()
 	FetchParse(url)
-
+	elapsedTime := time.Since(start)
+	log.Printf("%s", elapsedTime)
 }
